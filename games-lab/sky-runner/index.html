@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Sky Runner Lab</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="runner-shell" aria-label="Sky Runner test game">
+      <section class="hud">
+        <div>
+          <p class="eyebrow">Games lab</p>
+          <h1>Sky Runner</h1>
+        </div>
+        <div class="stats" aria-live="polite">
+          <span>Score <strong id="scoreLabel">0</strong></span>
+          <span>Coins <strong id="coinLabel">0</strong></span>
+          <span>Lives <strong id="lifeLabel">3</strong></span>
+        </div>
+      </section>
+
+      <div id="sceneHost" class="scene-host"></div>
+
+      <section class="message" id="messagePanel">
+        <h2 id="messageTitle">Ready?</h2>
+        <p id="messageText">Run forward, change lanes, and jump over gaps.</p>
+        <button id="startButton">Start</button>
+      </section>
+
+      <section class="touch-controls" aria-label="Game controls">
+        <button data-action="left" aria-label="Move left">
+          <span>&lt;</span>
+        </button>
+        <button data-action="jump" aria-label="Jump">
+          <span>^</span>
+        </button>
+        <button data-action="right" aria-label="Move right">
+          <span>&gt;</span>
+        </button>
+      </section>
+    </main>
+
+    <script type="module" src="sky-runner.js"></script>
+  </body>
+</html>

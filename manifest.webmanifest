@@ -1,0 +1,17 @@
+{
+  "name": "Клуб Гая",
+  "short_name": "Клуб Гая",
+  "description": "Учёба и призы для Гая.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff8ef",
+  "theme_color": "#e7352e",
+  "icons": [
+    {
+      "src": "assets/guy-driver.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
