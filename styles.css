@@ -1614,3 +1614,352 @@ body {
   background: #eef7f8;
   box-shadow: var(--shadow);
 }
+
+/* Chrome tablet viewport fit */
+html,
+body {
+  height: 100%;
+  min-height: 100svh;
+}
+
+body {
+  min-height: 100svh;
+}
+
+.app-shell {
+  width: min(1080px, calc(100vw - 8px));
+  height: calc(100vh - 8px);
+  height: calc(100dvh - 8px);
+  height: calc(100svh - 8px);
+  padding: 10px 12px;
+  gap: 8px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.app-shell > main {
+  padding: 0 3px 40px 0;
+}
+
+.topbar {
+  min-height: 40px;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+}
+
+.brand h1 {
+  font-size: 28px;
+}
+
+.brand p {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.points-pill {
+  min-height: 36px;
+  padding: 5px 10px;
+  font-size: 16px;
+}
+
+.coin {
+  width: 24px;
+  height: 24px;
+}
+
+.nav button {
+  min-height: 40px;
+  font-size: 18px;
+}
+
+.side-backup {
+  right: 12px;
+  bottom: 8px;
+  min-height: 34px;
+  font-size: 14px;
+}
+
+.hero {
+  height: min(258px, calc(100svh - 398px));
+  min-height: 198px;
+  margin-bottom: 10px;
+}
+
+.hero-copy {
+  padding: 18px;
+}
+
+.hero h2,
+.section-title {
+  font-size: 32px;
+}
+
+.panel {
+  padding: 12px;
+}
+
+.subject-card {
+  min-height: 190px;
+  padding: 14px;
+}
+
+.subject-icon {
+  width: 56px;
+  height: 56px;
+  font-size: 30px;
+}
+
+.muted,
+.subject-card p {
+  font-size: 15px;
+}
+
+.level-list {
+  max-height: calc(100svh - 192px);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.level-button {
+  min-height: 62px;
+  padding: 8px 10px;
+}
+
+.level-copy strong {
+  font-size: 18px;
+}
+
+.level-copy span {
+  font-size: 14px;
+}
+
+.lesson {
+  gap: 8px;
+}
+
+.lesson-head {
+  grid-template-columns: auto minmax(0, 1fr) 180px;
+}
+
+.lesson-head h2 {
+  font-size: 24px;
+}
+
+.lesson-head .muted {
+  font-size: 14px;
+}
+
+.question-card {
+  min-height: 160px;
+  max-height: 210px;
+  padding: 14px;
+}
+
+.question {
+  font-size: 36px;
+}
+
+.question.small,
+.question-stem {
+  font-size: 23px;
+}
+
+.hint {
+  padding: 9px 12px;
+  font-size: 16px;
+}
+
+.choice {
+  min-height: 56px;
+  max-height: 86px;
+  font-size: 22px;
+}
+
+.feedback {
+  font-size: 16px;
+}
+
+.practice-card {
+  margin: 8px 0;
+  padding: 9px 10px;
+}
+
+.practice-card h3 {
+  font-size: 20px;
+}
+
+.shop-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.item-card {
+  min-height: 230px;
+  grid-template-rows: 124px 40px 28px 38px;
+  padding: 9px;
+}
+
+.reward-frame {
+  height: 124px;
+}
+
+.reward-thumb {
+  width: 118px;
+  height: 118px;
+}
+
+.item-card h3 {
+  font-size: 18px;
+}
+
+.item-meta strong {
+  font-size: 20px;
+}
+
+.games-layout {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.game-slot,
+.games-intro {
+  min-height: 188px;
+}
+
+.game-slot {
+  padding: 12px;
+}
+
+.game-player {
+  height: calc(100vh - 104px);
+  height: calc(100dvh - 104px);
+  height: calc(100svh - 104px);
+  gap: 6px;
+}
+
+.game-player-head {
+  min-height: 46px;
+  padding: 7px 9px;
+}
+
+.game-player-head h2 {
+  font-size: 24px;
+}
+
+.game-frame {
+  box-shadow: var(--soft-shadow);
+}
+
+@media (max-height: 650px) {
+  .app-shell {
+    padding: 7px 9px;
+    gap: 6px;
+  }
+
+  .brand p {
+    display: none;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
+  .brand h1 {
+    font-size: 24px;
+  }
+
+  .points-pill {
+    min-height: 32px;
+    font-size: 14px;
+  }
+
+  .nav button {
+    min-height: 36px;
+    font-size: 16px;
+  }
+
+  .hero {
+    height: 206px;
+    min-height: 184px;
+    grid-template-columns: minmax(0, 1fr) 330px;
+  }
+
+  .hero h2,
+  .section-title {
+    font-size: 28px;
+  }
+
+  .grid {
+    gap: 8px;
+  }
+
+  .subject-card {
+    min-height: 168px;
+    padding: 11px;
+  }
+
+  .subject-card h3,
+  .panel h3 {
+    font-size: 20px;
+  }
+
+  .subject-card .primary,
+  .quick-actions .primary,
+  .quick-actions .ghost {
+    min-height: 38px;
+    font-size: 16px;
+  }
+
+  .level-list {
+    max-height: calc(100svh - 166px);
+  }
+
+  .level-button {
+    min-height: 54px;
+  }
+
+  .lesson-head {
+    grid-template-columns: auto minmax(0, 1fr) 150px;
+  }
+
+  .question-card {
+    min-height: 132px;
+    max-height: 172px;
+  }
+
+  .choice {
+    min-height: 48px;
+    font-size: 19px;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .item-card {
+    min-height: 196px;
+    grid-template-rows: 98px 34px 24px 34px;
+  }
+
+  .reward-frame {
+    height: 98px;
+  }
+
+  .reward-thumb {
+    width: 94px;
+    height: 94px;
+  }
+
+  .item-card h3 {
+    font-size: 15px;
+  }
+
+  .game-player {
+    height: calc(100svh - 84px);
+  }
+}

@@ -167,15 +167,15 @@
   }
 
   const games = [
-    { id: "brick-breaker", title: "Brick Breaker", icon: "BB", description: "Break bricks with a paddle and ball." },
+    { id: "brick-breaker", title: "Разбей блоки", icon: "ББ", description: "Разбей цветные блоки мячом." },
     { id: "word-hunter", title: "Слово-сыщик", price: 300, icon: "🔎", description: "Найти нужное слово в строке." },
     { id: "number-tower", title: "Башня чисел", price: 450, icon: "7", description: "Собрать башню из ответов." },
     { id: "hebrew-pairs", title: "Иврит-пары", price: 550, icon: "א", description: "Буква и звук." },
     { id: "memory-prizes", title: "Память", price: 700, icon: "★", description: "Открывать пары призов." }
   ];
   const BRICK_BREAKER_PACKS = [
-    { id: "brick-breaker-levels-1-5", levels: 5, price: 1000, label: "Levels 1-5" },
-    { id: "brick-breaker-levels-6-10", levels: 10, price: 1000, label: "Levels 6-10" }
+    { id: "brick-breaker-levels-1-5", levels: 5, price: 1000, label: "Уровни 1-5" },
+    { id: "brick-breaker-levels-6-10", levels: 10, price: 1000, label: "Уровни 6-10" }
   ];
 
   let progress = loadProgress();
@@ -1076,16 +1076,16 @@
       <article class="game-slot brick-breaker-card ${unlockedLevels ? "unlocked" : "locked"}">
         <div class="game-icon brick-game-icon">${game.icon}</div>
         <h3>${game.title}</h3>
-        <p class="muted">${unlockedLevels ? `Unlocked: levels 1-${unlockedLevels}` : game.description}</p>
+        <p class="muted">${unlockedLevels ? `Открыто: уровни 1-${unlockedLevels}` : game.description}</p>
         <div class="game-pack-actions">
           <button class="shop-button ${hasFirstPack ? "owned" : ""}" data-unlock-brick-pack="${firstPack.id}" ${hasFirstPack || !canBuyFirst ? "disabled" : ""}>
-            ${hasFirstPack ? "1-5 open" : canBuyFirst ? "1-5: 1000" : "Need 1000"}
+            ${hasFirstPack ? "1-5 открыто" : canBuyFirst ? "1-5: 1000" : "Нужно 1000"}
           </button>
           <button class="shop-button ${hasSecondPack ? "owned" : ""}" data-unlock-brick-pack="${secondPack.id}" ${hasSecondPack || !canBuySecond ? "disabled" : ""}>
-            ${hasSecondPack ? "6-10 open" : canBuySecond ? "6-10: 1000" : hasFirstPack ? "Need 1000" : "Open 1-5 first"}
+            ${hasSecondPack ? "6-10 открыто" : canBuySecond ? "6-10: 1000" : hasFirstPack ? "Нужно 1000" : "Сначала 1-5"}
           </button>
         </div>
-        <button class="primary game-play-button" data-route="brick-breaker" ${unlockedLevels ? "" : "disabled"}>Play</button>
+        <button class="primary game-play-button" data-route="brick-breaker" ${unlockedLevels ? "" : "disabled"}>Играть</button>
       </article>
     `;
   }
@@ -1101,22 +1101,22 @@
     if (!unlockedLevels) {
       return `
         <section class="panel">
-          <button class="ghost" data-route="games">Back</button>
-          <h2 class="section-title">Brick Breaker</h2>
-          <p class="muted">Unlock levels 1-5 first.</p>
+          <button class="ghost" data-route="games">Назад</button>
+          <h2 class="section-title">Разбей блоки</h2>
+          <p class="muted">Сначала открой уровни 1-5.</p>
         </section>
       `;
     }
     return `
       <section class="game-player">
         <div class="game-player-head">
-          <button class="ghost" data-route="games">Back</button>
+          <button class="ghost" data-route="games">Назад</button>
           <div>
-            <h2>Brick Breaker</h2>
-            <p class="muted">Levels 1-${unlockedLevels} unlocked</p>
+            <h2>Разбей блоки</h2>
+            <p class="muted">Открыто: уровни 1-${unlockedLevels}</p>
           </div>
         </div>
-        <iframe class="game-frame" title="Brick Breaker" src="games-lab/brick-breaker/index.html?maxLevel=${unlockedLevels}"></iframe>
+        <iframe class="game-frame" title="Разбей блоки" src="games-lab/brick-breaker/index.html?maxLevel=${unlockedLevels}"></iframe>
       </section>
     `;
   }
@@ -1297,7 +1297,7 @@
     progress.points -= pack.price;
     progress.unlockedGames.push(pack.id);
     saveProgress();
-    showToast(`Brick Breaker unlocked: ${pack.label}`);
+    showToast(`Игра открыта: ${pack.label}`);
     render();
   }
 
