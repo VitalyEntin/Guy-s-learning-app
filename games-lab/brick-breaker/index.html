@@ -1,50 +1,50 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Brick Breaker Lab</title>
+    <title>Разбей блоки</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="game-shell" aria-label="Brick Breaker test game">
-      <button class="touch-lane lane-left" data-hold="left" aria-label="Move left">
-        <span class="lane-arrow">‹</span>
-        <span>Hold left</span>
+    <main class="game-shell" aria-label="Игра Разбей блоки">
+      <button class="touch-lane lane-left" data-hold="left" aria-label="Влево">
+        <span class="lane-arrow">&lt;</span>
+        <span>Держи влево</span>
       </button>
 
       <section class="stage-column">
         <header class="game-header">
           <div>
-            <p class="eyebrow">Games lab</p>
-            <h1>Brick Breaker</h1>
+            <p class="eyebrow">игра</p>
+            <h1>Разбей блоки</h1>
           </div>
           <div class="stats" aria-live="polite">
-            <span>Level <strong id="levelLabel">1</strong></span>
-            <span>Score <strong id="scoreLabel">0</strong></span>
-            <span>Lives <strong id="livesLabel">3</strong></span>
+            <span>Уровень <strong id="levelLabel">1</strong></span>
+            <span>Очки <strong id="scoreLabel">0</strong></span>
+            <span>Жизни <strong id="livesLabel">3</strong></span>
           </div>
         </header>
 
         <div class="canvas-wrap">
-          <canvas id="gameCanvas" width="960" height="720" aria-label="Brick breaker playfield"></canvas>
+          <canvas id="gameCanvas" width="960" height="720" aria-label="Поле игры Разбей блоки"></canvas>
           <div class="screen-message" id="messagePanel">
-            <h2 id="messageTitle">Ready?</h2>
-            <p id="messageText">Break all colored bricks. Metal bricks stay on the board.</p>
-            <button id="startButton" class="primary">Start game</button>
+            <h2 id="messageTitle">Готов?</h2>
+            <p id="messageText">Разбей все цветные блоки. Серые блоки не ломаются.</p>
+            <button id="startButton" class="primary">Начать</button>
           </div>
         </div>
 
         <footer class="controls">
-          <button id="restartButton">Restart</button>
-          <button id="pauseButton">Pause</button>
-          <button id="nextButton" hidden>Next level</button>
+          <button id="restartButton">Заново</button>
+          <button id="pauseButton">Пауза</button>
+          <button id="nextButton" hidden>Дальше</button>
         </footer>
       </section>
 
-      <button class="touch-lane lane-right" data-hold="right" aria-label="Move right">
+      <button class="touch-lane lane-right" data-hold="right" aria-label="Вправо">
         <span class="lane-arrow">&gt;</span>
-        <span>Hold right</span>
+        <span>Держи вправо</span>
       </button>
     </main>
 

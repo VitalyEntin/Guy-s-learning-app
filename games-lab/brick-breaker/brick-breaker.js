@@ -28,7 +28,7 @@
 
   const levels = [
     {
-      name: "Sunrise wall",
+      name: "Утренняя стена",
       rows: [
         "....gggg....",
         "...cccccc...",
@@ -39,7 +39,7 @@
       ]
     },
     {
-      name: "Cracked crown",
+      name: "Треснувшая корона",
       rows: [
         "...aaaaaa...",
         "..agggggga..",
@@ -50,7 +50,7 @@
       ]
     },
     {
-      name: "Road blocks",
+      name: "Блоки на дороге",
       rows: [
         "..mmm..mmm..",
         ".ccca..accc.",
@@ -61,7 +61,7 @@
       ]
     },
     {
-      name: "Color lanes",
+      name: "Цветные дорожки",
       rows: [
         ".cccc..cccc.",
         "..gggggggg..",
@@ -72,7 +72,7 @@
       ]
     },
     {
-      name: "Shield wave",
+      name: "Волна щитов",
       rows: [
         "....aaaa....",
         "..ggccccgg..",
@@ -83,7 +83,7 @@
       ]
     },
     {
-      name: "Metal gates",
+      name: "Серые ворота",
       rows: [
         ".m.cccc.ccm.",
         ".m.gggg.ggm.",
@@ -94,7 +94,7 @@
       ]
     },
     {
-      name: "Twin towers",
+      name: "Две башни",
       rows: [
         ".cc..mm..cc.",
         ".gg..aa..gg.",
@@ -105,7 +105,7 @@
       ]
     },
     {
-      name: "Diamond drive",
+      name: "Алмазная трасса",
       rows: [
         ".....hh.....",
         "....aaaa....",
@@ -117,7 +117,7 @@
       ]
     },
     {
-      name: "Garage wall",
+      name: "Стена гаража",
       rows: [
         "mhhmhhhhmhhm",
         ".aaggggggaa.",
@@ -128,7 +128,7 @@
       ]
     },
     {
-      name: "Final circuit",
+      name: "Финальный круг",
       rows: [
         "mhhhaaaahhhm",
         "hccmggggmcch",
@@ -201,7 +201,7 @@
     resetPaddleAndBall();
     buildLevel();
     nextButton.hidden = true;
-    pauseButton.textContent = "Pause";
+    pauseButton.textContent = "Пауза";
     updateHud();
     draw();
   }
@@ -494,9 +494,9 @@
     state.score += 200 + state.levelIndex * 150;
       nextButton.hidden = state.levelIndex >= playableLevels.length - 1;
       showMessage(
-      state.levelIndex >= playableLevels.length - 1 ? "You cleared all levels" : "Level clear",
-      state.levelIndex >= playableLevels.length - 1 ? "Nice run. Restart to play from level one." : "The next pattern adds more trouble.",
-      state.levelIndex >= playableLevels.length - 1 ? "Play again" : "Replay level"
+      state.levelIndex >= playableLevels.length - 1 ? "Все уровни пройдены" : "Уровень готов",
+      state.levelIndex >= playableLevels.length - 1 ? "Отличная игра. Можно начать снова." : "Дальше будет новый рисунок блоков.",
+      state.levelIndex >= playableLevels.length - 1 ? "Играть снова" : "Повторить"
     );
     updateHud();
   }
@@ -504,7 +504,7 @@
   function lose() {
     state.lost = true;
     state.running = false;
-    showMessage("Try again", "All lives are gone. Restart this level and catch a bonus early.", "Restart");
+    showMessage("Попробуй ещё", "Жизни закончились. Начни уровень заново и лови бонусы.", "Заново");
   }
 
   function loseLife() {
@@ -522,7 +522,7 @@
       return;
     }
     resetPaddleAndBall();
-    showMessage("Life lost", `${state.lives} ${state.lives === 1 ? "life" : "lives"} left. Launch the ball when ready.`, "Launch ball");
+    showMessage("Минус жизнь", `Осталось жизней: ${state.lives}. Запусти мяч, когда будешь готов.`, "Запустить");
     updateHud();
     draw();
   }
@@ -722,11 +722,11 @@
   function drawActiveEffects() {
     const now = performance.now();
     const active = [];
-    if (state.effects.wideUntil > now) active.push(["Wide", state.effects.wideUntil]);
-    if (state.effects.narrowUntil > now) active.push(["Narrow", state.effects.narrowUntil]);
-    if (state.effects.slowUntil > now) active.push(["Slow", state.effects.slowUntil]);
-    if (state.effects.fastUntil > now) active.push(["Fast", state.effects.fastUntil]);
-    if (state.effects.fireUntil > now) active.push(["Fireball", state.effects.fireUntil]);
+    if (state.effects.wideUntil > now) active.push(["Шире", state.effects.wideUntil]);
+    if (state.effects.narrowUntil > now) active.push(["Уже", state.effects.narrowUntil]);
+    if (state.effects.slowUntil > now) active.push(["Медленно", state.effects.slowUntil]);
+    if (state.effects.fastUntil > now) active.push(["Быстро", state.effects.fastUntil]);
+    if (state.effects.fireUntil > now) active.push(["Огонь", state.effects.fireUntil]);
     if (!active.length) return;
 
     ctx.font = "800 15px Trebuchet MS, Arial";
@@ -741,7 +741,7 @@
       roundRect(x, y - 13, 128, 25, 8);
       ctx.fill();
       ctx.fillStyle = "#223042";
-      ctx.fillText(`${label} ${seconds}s`, x + 12, y);
+      ctx.fillText(`${label} ${seconds}с`, x + 12, y);
     });
   }
 
@@ -765,7 +765,7 @@
   function nextLevel() {
     if (state.levelIndex < playableLevels.length - 1) state.levelIndex += 1;
     resetGame(true);
-    showMessage(playableLevels[state.levelIndex].name, "A fresh brick pattern is ready.", "Start level");
+    showMessage(playableLevels[state.levelIndex].name, "Новый рисунок блоков готов.", "Начать");
   }
 
   function circleRect(ball, rect) {
@@ -811,14 +811,14 @@
   startButton.addEventListener("click", startGame);
   restartButton.addEventListener("click", () => {
     resetGame(false);
-    showMessage("Ready?", "Break all colored bricks. Metal bricks stay on the board.", "Start game");
+    showMessage("Готов?", "Разбей все цветные блоки. Серые блоки не ломаются.", "Начать");
   });
   pauseButton.addEventListener("click", () => {
     if (!state.running && !state.paused) return;
     state.paused = !state.paused;
-    pauseButton.textContent = state.paused ? "Resume" : "Pause";
+    pauseButton.textContent = state.paused ? "Играть" : "Пауза";
     if (state.paused) {
-      showMessage("Paused", "Take a breath, then resume the run.", "Resume");
+      showMessage("Пауза", "Отдохни немного и продолжай.", "Играть");
     } else {
       hideMessage();
       state.lastTime = performance.now();
