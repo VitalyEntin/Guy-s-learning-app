@@ -766,9 +766,12 @@
         selected: null,
         matched: [],
         leftPick: null,
-        rightPick: null
+        rightPick: null,
+        introDone: false
       };
     }
+
+    if (!activeLesson.introDone) return renderLessonIntro(subject, level);
 
     const exercise = level.exercises[activeLesson.index];
     if (!exercise) return renderLessonDone(subject, level);
@@ -784,6 +787,47 @@
         ${exercise.type === "match" ? renderMatchExercise(exercise) : renderChoiceExercise(exercise)}
       </section>
     `;
+  }
+
+  function renderLessonIntro(subject, level) {
+    const examples = lessonExamples(level).slice(0, 2);
+    return `
+      <section class="panel lesson lesson-intro">
+        <div class="lesson-head simple-head">
+          <button class="ghost" data-subject="${subject.id}">Назад</button>
+          <h2>${textSpan(level.title)}</h2>
+        </div>
+        <div class="intro-card">
+          <p class="eyebrow">перед уроком</p>
+          <h3>Что тренируем?</h3>
+          <p>${textSpan(level.description || "Будем читать, думать и выбирать ответ.")}</p>
+          <div class="intro-examples">
+            ${examples.map((example) => `
+              <div class="intro-example">
+                <span>${textSpan(example.prompt)}</span>
+                <strong>${textSpan(example.answer)}</strong>
+              </div>
+            `).join("")}
+          </div>
+          <button class="primary intro-start" data-start-lesson>Начать</button>
+        </div>
+      </section>
+    `;
+  }
+
+  function lessonExamples(level) {
+    return level.exercises
+      .filter((exercise) => exercise.type === "choice")
+      .map((exercise) => ({
+        prompt: introExamplePrompt(exercise),
+        answer: exercise.answer || ""
+      }))
+      .filter((example) => example.answer);
+  }
+
+  function introExamplePrompt(exercise) {
+    if (exercise.prompt && (!exercise.stem || exercise.stem.length > 54)) return exercise.prompt;
+    return exercise.stem || exercise.prompt || "Вопрос";
   }
 
   function renderEndless(subjectId) {
@@ -867,18 +911,18 @@
   function renderChoiceExercise(exercise) {
     const isSmall = (exercise.prompt || "").length > 18 || (exercise.stem || "").length > 46;
     return `
-      <div class="question-card ${exercise.rtl ? "rtl" : ""}">
-        ${exercise.stem ? `<div class="question-stem">${exercise.stem}</div>` : ""}
+      <div class="question-card">
+        ${exercise.stem ? `<div class="question-stem">${textSpan(exercise.stem)}</div>` : ""}
         ${exercise.visual ? renderVisual(exercise.visual) : ""}
-        ${exercise.prompt ? `<div class="question ${isSmall ? "small" : ""} ${exercise.rtl ? "rtl" : ""}">${exercise.prompt}</div>` : ""}
-        ${exercise.hint ? `<div class="hint">${exercise.hint}</div>` : ""}
+        ${exercise.prompt ? `<div class="question ${isSmall ? "small" : ""}">${textSpan(exercise.prompt)}</div>` : ""}
+        ${exercise.hint ? `<div class="hint">${textSpan(exercise.hint)}</div>` : ""}
       </div>
       <div class="choices">
         ${exercise.options.map((option) => {
           let cls = "";
           if (activeLesson.answered && option === exercise.answer) cls = "correct";
           if (activeLesson.answered && option === activeLesson.selected && option !== exercise.answer) cls = "wrong";
-          return `<button class="choice ${cls} ${exercise.rtl ? "rtl" : ""}" data-answer="${escapeAttr(option)}">${option}</button>`;
+          return `<button class="choice ${cls}" dir="${textDirection(option)}" data-answer="${escapeAttr(option)}">${textSpan(option)}</button>`;
         }).join("")}
       </div>
       <div class="feedback">${activeLesson.answered ? feedbackFor(exercise) : "Выбери ответ."}</div>
@@ -889,18 +933,18 @@
   function renderEndlessChoice(exercise) {
     const isSmall = (exercise.prompt || "").length > 18 || (exercise.stem || "").length > 46;
     return `
-      <div class="question-card ${exercise.rtl ? "rtl" : ""}">
-        ${exercise.stem ? `<div class="question-stem">${exercise.stem}</div>` : ""}
+      <div class="question-card">
+        ${exercise.stem ? `<div class="question-stem">${textSpan(exercise.stem)}</div>` : ""}
         ${exercise.visual ? renderVisual(exercise.visual) : ""}
-        ${exercise.prompt ? `<div class="question ${isSmall ? "small" : ""} ${exercise.rtl ? "rtl" : ""}">${exercise.prompt}</div>` : ""}
-        ${exercise.hint ? `<div class="hint">${exercise.hint}</div>` : ""}
+        ${exercise.prompt ? `<div class="question ${isSmall ? "small" : ""}">${textSpan(exercise.prompt)}</div>` : ""}
+        ${exercise.hint ? `<div class="hint">${textSpan(exercise.hint)}</div>` : ""}
       </div>
       <div class="choices">
         ${exercise.options.map((option) => {
           let cls = "";
           if (activeEndless.answered && option === exercise.answer) cls = "correct";
           if (activeEndless.answered && option === activeEndless.selected && option !== exercise.answer) cls = "wrong";
-          return `<button class="choice ${cls} ${exercise.rtl ? "rtl" : ""}" data-endless-answer="${escapeAttr(option)}" ${activeEndless.answered ? "disabled" : ""}>${option}</button>`;
+          return `<button class="choice ${cls}" dir="${textDirection(option)}" data-endless-answer="${escapeAttr(option)}" ${activeEndless.answered ? "disabled" : ""}>${textSpan(option)}</button>`;
         }).join("")}
       </div>
       <div class="feedback">${activeEndless.answered ? endlessFeedback(exercise) : "Выбери ответ. За верный ответ: 2 очка."}</div>
@@ -927,7 +971,7 @@
     const right = exercise.pairs.map((pair) => pair[1]).slice().reverse();
     const allDone = activeLesson.matched.length === exercise.pairs.length;
     return `
-      <div class="question small ${exercise.rtl ? "rtl" : ""}">${exercise.prompt}</div>
+      <div class="question small">${textSpan(exercise.prompt)}</div>
       <div class="match-grid">
         <div class="match-col">
           ${left.map((value) => matchTile(value, "left", exercise.rtl)).join("")}
@@ -944,7 +988,7 @@
   function matchTile(value, side, rtl) {
     const done = activeLesson.matched.some((pair) => pair.includes(value));
     const selected = activeLesson.leftPick === value || activeLesson.rightPick === value;
-    return `<button class="match-tile ${done ? "done" : ""} ${selected ? "selected" : ""} ${rtl ? "rtl" : ""}" data-match-side="${side}" data-match-value="${escapeAttr(value)}">${value}</button>`;
+    return `<button class="match-tile ${done ? "done" : ""} ${selected ? "selected" : ""}" dir="${textDirection(value)}" data-match-side="${side}" data-match-value="${escapeAttr(value)}">${textSpan(value)}</button>`;
   }
 
   function feedbackFor(exercise) {
@@ -1116,7 +1160,7 @@
             <p class="muted">Открыто: уровни 1-${unlockedLevels}</p>
           </div>
         </div>
-        <iframe class="game-frame" title="Разбей блоки" src="games-lab/brick-breaker/index.html?maxLevel=${unlockedLevels}"></iframe>
+        <iframe class="game-frame" title="Разбей блоки" src="games-lab/brick-breaker/index.html?maxLevel=${unlockedLevels}&v=13"></iframe>
       </section>
     `;
   }
@@ -1151,6 +1195,10 @@
 
     app.querySelectorAll("[data-endless-subject]").forEach((button) => {
       button.addEventListener("click", () => setRoute({ view: "endless", subjectId: button.dataset.endlessSubject }));
+    });
+
+    app.querySelectorAll("[data-start-lesson]").forEach((button) => {
+      button.addEventListener("click", startLessonQuestions);
     });
 
     app.querySelectorAll("[data-answer]").forEach((button) => {
@@ -1193,6 +1241,12 @@
 
     const resetButton = app.querySelector("[data-reset]");
     if (resetButton) resetButton.addEventListener("click", resetProgress);
+  }
+
+  function startLessonQuestions() {
+    if (!activeLesson) return;
+    activeLesson.introDone = true;
+    render();
   }
 
   function chooseAnswer(answer) {
@@ -1341,6 +1395,37 @@
   function escapeAttr(value) {
     return String(value).replace(/"/g, "&quot;");
   }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function normalizeText(value) {
+    return String(value).replace(/<</g, "«").replace(/>>/g, "»");
+  }
+
+  function textDirection(value) {
+    const text = normalizeText(value);
+    const hebrew = (text.match(/[\u0590-\u05ff]/g) || []).length;
+    const latinOrCyrillic = (text.match(/[A-Za-zА-Яа-яЁё0-9]/g) || []).length;
+    return hebrew > latinOrCyrillic ? "rtl" : "ltr";
+  }
+
+  function textSpan(value) {
+    const text = normalizeText(value);
+    return `<span class="text-run" dir="${textDirection(text)}">${escapeHtml(text)}</span>`;
+  }
+
+  ["contextmenu", "selectstart", "dragstart"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => {
+      const target = event.target;
+      if (target && target.closest && target.closest("button, .app-shell")) event.preventDefault();
+    }, { capture: true });
+  });
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

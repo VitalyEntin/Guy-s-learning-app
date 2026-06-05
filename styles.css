@@ -18,6 +18,7 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -29,6 +30,10 @@ body {
   color: var(--ink);
   font-family: "Trebuchet MS", "Segoe UI", Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 500;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
 }
 
 button,
@@ -39,6 +44,10 @@ select {
 
 button {
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .app-shell {
@@ -555,6 +564,10 @@ button {
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
+.text-run {
+  unicode-bidi: isolate;
+}
+
 .choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -587,6 +600,70 @@ button {
   color: var(--muted);
   font-size: 19px;
   font-weight: 650;
+}
+
+.intro-card {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  min-height: 420px;
+  padding: 24px;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 245, 225, 0.92)),
+    repeating-linear-gradient(0deg, rgba(13, 167, 163, 0.05) 0 2px, transparent 2px 18px);
+  border: 2px solid rgba(13, 167, 163, 0.14);
+  text-align: center;
+}
+
+.intro-card h3 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.08;
+}
+
+.intro-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.intro-examples {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.intro-example {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+  min-height: 116px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: #fff;
+  border: 1px solid rgba(38, 49, 61, 0.1);
+}
+
+.intro-example span {
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.intro-example strong {
+  color: var(--ink);
+  font-size: 26px;
+  line-height: 1.12;
+  font-weight: 650;
+}
+
+.intro-start {
+  justify-self: center;
+  min-width: 190px;
+  min-height: 54px;
+  font-size: 22px;
 }
 
 .match-grid {
@@ -1773,13 +1850,45 @@ body {
 }
 
 .choice {
-  min-height: 56px;
-  max-height: 86px;
-  font-size: 22px;
+  min-height: 64px;
+  max-height: 98px;
+  font-size: 28px;
 }
 
 .feedback {
   font-size: 16px;
+}
+
+.intro-card {
+  min-height: 360px;
+  gap: 10px;
+  padding: 18px;
+}
+
+.intro-card h3 {
+  font-size: 30px;
+}
+
+.intro-card p {
+  font-size: 21px;
+}
+
+.intro-example {
+  min-height: 92px;
+  padding: 11px;
+}
+
+.intro-example span {
+  font-size: 17px;
+}
+
+.intro-example strong {
+  font-size: 24px;
+}
+
+.intro-start {
+  min-height: 48px;
+  font-size: 20px;
 }
 
 .practice-card {
@@ -1933,8 +2042,33 @@ body {
   }
 
   .choice {
-    min-height: 48px;
-    font-size: 19px;
+    min-height: 56px;
+    font-size: 24px;
+  }
+
+  .intro-card {
+    min-height: 304px;
+    padding: 14px;
+  }
+
+  .intro-card h3 {
+    font-size: 25px;
+  }
+
+  .intro-card p {
+    font-size: 18px;
+  }
+
+  .intro-example {
+    min-height: 78px;
+  }
+
+  .intro-example span {
+    font-size: 15px;
+  }
+
+  .intro-example strong {
+    font-size: 21px;
   }
 
   .shop-grid {
