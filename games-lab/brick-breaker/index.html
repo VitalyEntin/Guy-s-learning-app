@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Разбей блоки</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20">
   </head>
   <body>
     <main class="game-shell" aria-label="Игра Разбей блоки">
-      <button class="touch-lane lane-left" data-hold="left" aria-label="Влево">
+      <div class="touch-lane lane-left" data-hold="left" role="button" aria-label="Влево">
         <span class="lane-arrow">&lt;</span>
         <span>Держи влево</span>
-      </button>
+      </div>
 
       <section class="stage-column">
         <header class="game-header">
@@ -42,12 +42,12 @@
         </footer>
       </section>
 
-      <button class="touch-lane lane-right" data-hold="right" aria-label="Вправо">
+      <div class="touch-lane lane-right" data-hold="right" role="button" aria-label="Вправо">
         <span class="lane-arrow">&gt;</span>
         <span>Держи вправо</span>
-      </button>
+      </div>
     </main>
 
-    <script src="brick-breaker.js"></script>
+    <script src="brick-breaker.js?v=20"></script>
   </body>
 </html>

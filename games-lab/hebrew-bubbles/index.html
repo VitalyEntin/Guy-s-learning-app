@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#e7352e">
+    <title>Иврит-пузыри</title>
+    <link rel="stylesheet" href="styles.css?v=20">
+  </head>
+  <body>
+    <main class="bubble-game" aria-label="Иврит-пузыри">
+      <canvas id="game" aria-label="Игровое поле"></canvas>
+      <div class="hud">
+        <div>
+          <span class="label">Найди</span>
+          <strong id="target">ба</strong>
+        </div>
+        <div>
+          <span class="label">Очки</span>
+          <strong id="score">0</strong>
+        </div>
+        <div>
+          <span class="label">Жизни</span>
+          <strong id="lives">3</strong>
+        </div>
+      </div>
+      <div class="target-flash" id="targetFlash">
+        <div class="target-flash-card">
+          <span>Теперь найди</span>
+          <strong id="targetFlashText">ба</strong>
+        </div>
+      </div>
+      <section class="start-layer" id="startLayer">
+        <h1>Иврит-пузыри</h1>
+        <p>Смотри на звук снизу. Лопай пузыри с нужной буквой или слогом.</p>
+        <button id="startButton" type="button">Начать</button>
+      </section>
+      <section class="end-layer" id="endLayer" hidden>
+        <h1>Готово!</h1>
+        <p id="endText">Ты лопнул много пузырей.</p>
+        <button id="restartButton" type="button">Ещё раз</button>
+        <button id="exitButton" type="button">К играм</button>
+      </section>
+    </main>
+    <script src="hebrew-bubbles.js?v=20"></script>
+  </body>
+</html>

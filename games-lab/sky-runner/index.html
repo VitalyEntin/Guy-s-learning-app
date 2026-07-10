@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Sky Runner Lab</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=10">
   </head>
   <body>
     <main class="runner-shell" aria-label="Sky Runner test game">
@@ -16,6 +16,7 @@
         <div class="stats" aria-live="polite">
           <span>Score <strong id="scoreLabel">0</strong></span>
           <span>Coins <strong id="coinLabel">0</strong></span>
+          <span>Speed <strong id="speedLabel">1X</strong></span>
           <span>Lives <strong id="lifeLabel">3</strong></span>
         </div>
       </section>
@@ -24,7 +25,7 @@
 
       <section class="message" id="messagePanel">
         <h2 id="messageTitle">Ready?</h2>
-        <p id="messageText">Run forward, change lanes, and jump over gaps.</p>
+        <p id="messageText">Run through neon space, change lanes, and jump the gaps.</p>
         <button id="startButton">Start</button>
       </section>
 
@@ -41,6 +42,6 @@
       </section>
     </main>
 
-    <script type="module" src="sky-runner.js"></script>
+    <script type="module" src="sky-runner.js?v=10"></script>
   </body>
 </html>

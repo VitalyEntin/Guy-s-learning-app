@@ -1,6 +1,12 @@
 (function () {
   const STORAGE_KEY = "guy-learning-progress-v1";
   const app = document.getElementById("app");
+  const REVIEW_AFTER_DAYS = 14;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const ADMIN_PASSWORD = "redcar2026";
+  const LEARNING_CHUNK_SECONDS = 10 * 60;
+  const PLAY_CHUNK_SECONDS = 3 * 60;
+  const LEARNING_IDLE_SECONDS = 30;
 
   const data = {
     subjects: [
@@ -168,10 +174,7 @@
 
   const games = [
     { id: "brick-breaker", title: "Разбей блоки", icon: "ББ", description: "Разбей цветные блоки мячом." },
-    { id: "word-hunter", title: "Слово-сыщик", price: 300, icon: "🔎", description: "Найти нужное слово в строке." },
-    { id: "number-tower", title: "Башня чисел", price: 450, icon: "7", description: "Собрать башню из ответов." },
-    { id: "hebrew-pairs", title: "Иврит-пары", price: 550, icon: "א", description: "Буква и звук." },
-    { id: "memory-prizes", title: "Память", price: 700, icon: "★", description: "Открывать пары призов." }
+    { id: "hebrew-bubbles", title: "Иврит-пузыри", price: 650, icon: "א", description: "Лови буквы и слоги по русскому звуку." }
   ];
   const BRICK_BREAKER_PACKS = [
     { id: "brick-breaker-levels-1-5", levels: 5, price: 1000, label: "Уровни 1-5" },
@@ -183,6 +186,11 @@
   let route = { view: "home" };
   let activeLesson = null;
   let activeEndless = null;
+  let activeGameSession = null;
+  let adminUnlocked = false;
+  let showTimeBank = false;
+  let lastActivityTick = Date.now();
+  let lastLearningActionAt = 0;
   let toastTimer = null;
 
   function buildContent() {
@@ -549,7 +557,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return freshProgress();
-      return { ...freshProgress(), ...JSON.parse(raw) };
+      return normalizeProgress(JSON.parse(raw));
     } catch {
       return freshProgress();
     }
@@ -561,11 +569,35 @@
       childName: "Гай",
       points: 0,
       completed: {},
+      completedAt: {},
       stars: {},
       inventory: [],
       unlockedGames: [],
+      adminLog: [],
+      gameSessions: {},
+      learningSeconds: 0,
+      playSeconds: 0,
       updatedAt: new Date().toISOString()
     };
+  }
+
+  function normalizeProgress(raw) {
+    const base = freshProgress();
+    const next = { ...base, ...raw };
+    next.completed = { ...base.completed, ...(raw.completed || {}) };
+    next.completedAt = { ...base.completedAt, ...(raw.completedAt || {}) };
+    next.stars = { ...base.stars, ...(raw.stars || {}) };
+    next.inventory = Array.isArray(raw.inventory) ? raw.inventory : [];
+    next.unlockedGames = Array.isArray(raw.unlockedGames) ? raw.unlockedGames : [];
+    next.adminLog = Array.isArray(raw.adminLog) ? raw.adminLog : [];
+    next.gameSessions = { ...base.gameSessions, ...(raw.gameSessions || {}) };
+    next.learningSeconds = Math.max(0, Number(raw.learningSeconds) || 0);
+    next.playSeconds = Math.max(0, Number(raw.playSeconds) || 0);
+    const fallbackDate = raw.updatedAt || new Date().toISOString();
+    Object.keys(next.completed).forEach((levelId) => {
+      if (next.completed[levelId] && !next.completedAt[levelId]) next.completedAt[levelId] = fallbackDate;
+    });
+    return next;
   }
 
   function saveProgress() {
@@ -577,6 +609,7 @@
     const params = new URLSearchParams(window.location.search);
     if (params.get("clearLessons") !== "1") return;
     progress.completed = {};
+    progress.completedAt = {};
     progress.stars = {};
     saveProgress();
     params.delete("clearLessons");
@@ -588,15 +621,56 @@
   function subjectProgress(subject) {
     const total = subject.levels.length;
     const done = subject.levels.filter((level) => progress.completed[level.id]).length;
-    return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+    const fresh = subject.levels.filter((level) => lessonFresh(level.id)).length;
+    const stale = subject.levels.filter((level) => lessonNeedsRefresh(level.id)).length;
+    return { done, fresh, stale, total, pct: total ? Math.round((fresh / total) * 100) : 0 };
+  }
+
+  function lessonCompleted(levelId) {
+    return !!progress.completed[levelId];
+  }
+
+  function lessonNeedsRefresh(levelId) {
+    if (!lessonCompleted(levelId)) return false;
+    const completedAt = Date.parse(progress.completedAt[levelId] || progress.updatedAt || "");
+    if (!Number.isFinite(completedAt)) return true;
+    return Date.now() - completedAt > REVIEW_AFTER_DAYS * DAY_MS;
+  }
+
+  function lessonFresh(levelId) {
+    return lessonCompleted(levelId) && !lessonNeedsRefresh(levelId);
+  }
+
+  function canOpenLesson(subject, level, index) {
+    if (index === 0 || lessonCompleted(level.id)) return true;
+    const previous = subject.levels[index - 1];
+    return previous ? lessonFresh(previous.id) : false;
+  }
+
+  function lessonStatus(level, unlocked) {
+    if (lessonNeedsRefresh(level.id)) return { mark: "↻", text: "повтори" };
+    if (lessonCompleted(level.id)) return { mark: "✓", text: "готово" };
+    if (unlocked) return { mark: "›", text: `${level.points} очков` };
+    return { mark: "🔒", text: "закрыто" };
   }
 
   function setRoute(next) {
     const sameEndless = route.view === "endless" && next.view === "endless" && route.subjectId === next.subjectId;
+    if (route.view === "admin" && next.view !== "admin") adminUnlocked = false;
+    if (isGameRoute(route.view) && next.view !== route.view) activeGameSession = null;
+    if (next.view !== route.view) showTimeBank = false;
     route = next;
     activeLesson = null;
     if (!sameEndless) activeEndless = null;
     render();
+  }
+
+  function isLearningRoute(view = route.view) {
+    return view === "lesson" || view === "endless";
+  }
+
+  function isGameRoute(view = route.view) {
+    return view === "brick-breaker" || view === "hebrew-bubbles";
   }
 
   function showToast(message) {
@@ -608,6 +682,22 @@
     document.body.appendChild(toast);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.remove(), 2600);
+  }
+
+  function formatShortTime(seconds) {
+    const safe = Math.max(0, Math.floor(seconds));
+    const minutes = Math.floor(safe / 60);
+    const rest = String(safe % 60).padStart(2, "0");
+    return `${minutes}:${rest}`;
+  }
+
+  function formatLongTime(seconds) {
+    const safe = Math.max(0, Math.ceil(seconds));
+    const minutes = Math.floor(safe / 60);
+    const rest = safe % 60;
+    if (!minutes) return `${rest} сек`;
+    if (!rest) return `${minutes} мин`;
+    return `${minutes} мин ${rest} сек`;
   }
 
   function render() {
@@ -630,14 +720,50 @@
         ${navButton("games", "Игры")}
       </nav>
       <button class="side-backup" data-route="backup" aria-label="Бэкап">Бэкап</button>
+      <button class="side-admin" data-route="admin" aria-label="Папа">Папа</button>
+      ${renderTimeBankWidget()}
       <main>${renderView()}</main>
     `;
 
     bindCommonEvents();
+    updateTimeBankWidget();
+    broadcastPlayTime();
+  }
+
+  function renderTimeBankWidget() {
+    return `
+      <button class="time-bank ${timeBankStatus()}" data-time-bank aria-label="Игровое время">
+        <span class="time-bank-icon">◷</span>
+        <span class="time-bank-text">${progress.playSeconds > 0 ? formatShortTime(progress.playSeconds) : `${Math.floor((progress.learningSeconds / LEARNING_CHUNK_SECONDS) * 100)}%`}</span>
+      </button>
+      ${showTimeBank ? `
+        <div class="time-popover">
+          <strong>${progress.playSeconds > 0 ? "Можно играть" : "Пока учимся"}</strong>
+          <span>Игровое время: ${formatLongTime(progress.playSeconds)}</span>
+          <span>До нового кусочка: ${formatLongTime(Math.max(0, LEARNING_CHUNK_SECONDS - progress.learningSeconds))}</span>
+        </div>
+      ` : ""}
+    `;
+  }
+
+  function timeBankStatus() {
+    if (progress.playSeconds > 0) return "ready";
+    if (learningClockActive()) return "earning";
+    return "empty";
+  }
+
+  function updateTimeBankWidget() {
+    const button = document.querySelector("[data-time-bank]");
+    if (!button) return;
+    button.classList.toggle("ready", progress.playSeconds > 0);
+    button.classList.toggle("earning", progress.playSeconds <= 0 && learningClockActive());
+    button.classList.toggle("empty", progress.playSeconds <= 0 && !learningClockActive());
+    const text = button.querySelector(".time-bank-text");
+    if (text) text.textContent = progress.playSeconds > 0 ? formatShortTime(progress.playSeconds) : `${Math.floor((progress.learningSeconds / LEARNING_CHUNK_SECONDS) * 100)}%`;
   }
 
   function navButton(view, label) {
-    const active = route.view === view || (route.view === "subject" && view === "learn") || (route.view === "lesson" && view === "learn") || (route.view === "endless" && view === "learn") || (route.view === "brick-breaker" && view === "games");
+    const active = route.view === view || (route.view === "subject" && view === "learn") || (route.view === "lesson" && view === "learn") || (route.view === "endless" && view === "learn") || ((route.view === "brick-breaker" || route.view === "hebrew-bubbles") && view === "games");
     return `<button class="${active ? "active" : ""}" data-route="${view}">${label}</button>`;
   }
 
@@ -650,7 +776,9 @@
     if (route.view === "garage") return renderGarage();
     if (route.view === "games") return renderGames();
     if (route.view === "brick-breaker") return renderBrickBreaker();
+    if (route.view === "hebrew-bubbles") return renderHebrewBubbles();
     if (route.view === "backup") return renderBackup();
+    if (route.view === "admin") return renderAdmin();
     return renderHome();
   }
 
@@ -711,6 +839,7 @@
         <div>
           <div class="progress-line" aria-hidden="true"><span style="width:${stats.pct}%"></span></div>
           <p class="muted">${stats.done} из ${stats.total}</p>
+          ${stats.stale ? `<p class="muted small-note">${stats.stale} надо повторить</p>` : ""}
           <button class="primary" data-subject="${subject.id}">Открыть</button>
         </div>
       </article>
@@ -736,15 +865,16 @@
         </div>
         <div class="level-list">
           ${subject.levels.map((level, index) => {
-            const unlocked = index === 0 || progress.completed[subject.levels[index - 1].id] || progress.completed[level.id];
+            const unlocked = canOpenLesson(subject, level, index);
+            const status = lessonStatus(level, unlocked);
             return `
             <button class="level-button ${unlocked ? "" : "locked"}" data-level="${level.id}" data-subject="${subject.id}" ${unlocked ? "" : "disabled"}>
               <span class="level-num">${index + 1}</span>
               <span class="level-copy">
                 <strong>${level.title}</strong>
-                <span>${unlocked ? `${level.points} очков` : "закрыто"}</span>
+                <span>${status.text}</span>
               </span>
-              <span class="level-status">${progress.completed[level.id] ? "✓" : unlocked ? "›" : "🔒"}</span>
+              <span class="level-status">${status.mark}</span>
             </button>
           `}).join("")}
         </div>
@@ -1008,9 +1138,12 @@
     if (firstTime) {
       progress.points += level.points + bonus;
       progress.completed[level.id] = true;
+      progress.completedAt[level.id] = new Date().toISOString();
       progress.stars[level.id] = activeLesson.mistakes === 0 ? 3 : activeLesson.mistakes === 1 ? 2 : 1;
     } else {
       progress.points += practicePoints;
+      progress.completedAt[level.id] = new Date().toISOString();
+      progress.stars[level.id] = Math.max(progress.stars[level.id] || 1, activeLesson.mistakes === 0 ? 3 : activeLesson.mistakes === 1 ? 2 : 1);
     }
     saveProgress();
     const earnedText = firstTime ? `Ты получил ${level.points + bonus} очков.` : `Практика: +${practicePoints} очков.`;
@@ -1096,6 +1229,7 @@
     if (game.id === "brick-breaker") return renderBrickBreakerCard(game);
     const unlocked = progress.unlockedGames.includes(game.id);
     const canUnlock = progress.points >= game.price && !unlocked;
+    const canPlay = unlocked && canStartGameRun();
     return `
       <article class="game-slot ${unlocked ? "unlocked" : "locked"}">
         <div class="game-icon">${game.icon}</div>
@@ -1104,6 +1238,10 @@
         <button class="shop-button ${unlocked ? "owned" : ""}" data-unlock-game="${game.id}" ${unlocked || !canUnlock ? "disabled" : ""}>
           ${unlocked ? "Открыто" : canUnlock ? `${game.price} очков` : `Нужно ${game.price}`}
         </button>
+        <button class="primary game-play-button" data-play-game="${game.id}" ${canPlay ? "" : "disabled"}>
+          ${unlocked ? canPlay ? "Играть" : "Нужно время" : "Сначала открыть"}
+        </button>
+        <p class="game-time-note">В банке: ${formatShortTime(progress.playSeconds)}</p>
       </article>
     `;
   }
@@ -1116,6 +1254,7 @@
     const hasSecondPack = progress.unlockedGames.includes(secondPack.id);
     const canBuyFirst = progress.points >= firstPack.price && !hasFirstPack;
     const canBuySecond = hasFirstPack && progress.points >= secondPack.price && !hasSecondPack;
+    const canPlay = !!unlockedLevels && canStartGameRun();
     return `
       <article class="game-slot brick-breaker-card ${unlockedLevels ? "unlocked" : "locked"}">
         <div class="game-icon brick-game-icon">${game.icon}</div>
@@ -1129,7 +1268,10 @@
             ${hasSecondPack ? "6-10 открыто" : canBuySecond ? "6-10: 1000" : hasFirstPack ? "Нужно 1000" : "Сначала 1-5"}
           </button>
         </div>
-        <button class="primary game-play-button" data-route="brick-breaker" ${unlockedLevels ? "" : "disabled"}>Играть</button>
+        <button class="primary game-play-button" data-play-game="brick-breaker" ${canPlay ? "" : "disabled"}>
+          ${unlockedLevels ? canPlay ? "Играть" : "Нужно время" : "Сначала открыть"}
+        </button>
+        <p class="game-time-note">В банке: ${formatShortTime(progress.playSeconds)}</p>
       </article>
     `;
   }
@@ -1140,8 +1282,53 @@
     return 0;
   }
 
+  function gameById(gameId) {
+    return games.find((entry) => entry.id === gameId);
+  }
+
+  function gameUnlocked(gameId) {
+    if (gameId === "brick-breaker") return brickBreakerUnlockedLevels() > 0;
+    return progress.unlockedGames.includes(gameId);
+  }
+
+  function hasActiveGameSession(gameId) {
+    return activeGameSession && activeGameSession.gameId === gameId;
+  }
+
+  function canStartGameRun() {
+    return progress.playSeconds > 0;
+  }
+
+  function startPaidGame(gameId) {
+    const game = gameById(gameId);
+    if (!game || !gameUnlocked(gameId)) return;
+    if (hasActiveGameSession(gameId)) {
+      setRoute({ view: gameId });
+      return;
+    }
+    if (!canStartGameRun()) return;
+    progress.gameSessions[gameId] = (progress.gameSessions[gameId] || 0) + 1;
+    activeGameSession = {
+      gameId,
+      startedAt: Date.now()
+    };
+    saveProgress();
+    setRoute({ view: gameId });
+  }
+
+  function renderGameNeedsSession(game) {
+    return `
+      <section class="panel">
+        <button class="ghost" data-route="games">Назад</button>
+        <h2 class="section-title">${game.title}</h2>
+        <p class="muted">Начни игру с экрана игр, когда зелёные часы покажут готовое игровое время.</p>
+      </section>
+    `;
+  }
+
   function renderBrickBreaker() {
     const unlockedLevels = brickBreakerUnlockedLevels();
+    const game = gameById("brick-breaker");
     if (!unlockedLevels) {
       return `
         <section class="panel">
@@ -1151,6 +1338,7 @@
         </section>
       `;
     }
+    if (!hasActiveGameSession("brick-breaker")) return renderGameNeedsSession(game);
     return `
       <section class="game-player">
         <div class="game-player-head">
@@ -1160,7 +1348,33 @@
             <p class="muted">Открыто: уровни 1-${unlockedLevels}</p>
           </div>
         </div>
-        <iframe class="game-frame" title="Разбей блоки" src="games-lab/brick-breaker/index.html?maxLevel=${unlockedLevels}&v=13"></iframe>
+        <iframe class="game-frame" title="Разбей блоки" src="games-lab/brick-breaker/index.html?maxLevel=${unlockedLevels}&v=20"></iframe>
+      </section>
+    `;
+  }
+
+  function renderHebrewBubbles() {
+    const game = gameById("hebrew-bubbles");
+    if (!gameUnlocked("hebrew-bubbles")) {
+      return `
+        <section class="panel">
+          <button class="ghost" data-route="games">Назад</button>
+          <h2 class="section-title">Иврит-пузыри</h2>
+          <p class="muted">Сначала открой игру за очки.</p>
+        </section>
+      `;
+    }
+    if (!hasActiveGameSession("hebrew-bubbles")) return renderGameNeedsSession(game);
+    return `
+      <section class="game-player">
+        <div class="game-player-head">
+          <button class="ghost" data-route="games">Назад</button>
+          <div>
+            <h2>Иврит-пузыри</h2>
+            <p class="muted">Лови буквы по русскому звуку.</p>
+          </div>
+        </div>
+        <iframe class="game-frame" title="Иврит-пузыри" src="games-lab/hebrew-bubbles/index.html?v=20"></iframe>
       </section>
     `;
   }
@@ -1176,6 +1390,99 @@
           <input class="file-input" type="file" accept="application/json" data-import>
         </label>
         <button class="backup-button" data-reset>Сбросить демо-прогресс</button>
+      </section>
+    `;
+  }
+
+  function renderAdmin() {
+    if (!adminUnlocked) {
+      return `
+        <section class="panel admin-panel">
+          <button class="ghost" data-route="home">Назад</button>
+          <h2 class="section-title">Панель папы</h2>
+          <p class="muted">Введите пароль, чтобы чинить очки, вещи, уроки и игры.</p>
+          <div class="admin-login-row">
+            <input type="password" data-admin-password autocomplete="off" placeholder="пароль">
+            <button class="primary" data-admin-login>Войти</button>
+          </div>
+        </section>
+      `;
+    }
+
+    const lessonBlocks = data.subjects.map((subject) => `
+      <div class="admin-block">
+        <h3>${subject.title}</h3>
+        <div class="admin-check-grid">
+          ${subject.levels.map((level, index) => `
+            <label class="admin-check">
+              <input type="checkbox" data-admin-lesson="${level.id}" ${lessonCompleted(level.id) ? "checked" : ""}>
+              <span>${index + 1}. ${level.title}${lessonNeedsRefresh(level.id) ? " · повторить" : ""}</span>
+            </label>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+
+    const allGameUnlocks = [
+      ...BRICK_BREAKER_PACKS.map((pack) => ({ id: pack.id, title: `Разбей блоки: ${pack.label}` })),
+      ...games.filter((game) => game.id !== "brick-breaker").map((game) => ({ id: game.id, title: game.title }))
+    ];
+
+    return `
+      <section class="panel admin-panel">
+        <button class="ghost" data-route="home">Назад</button>
+        <h2 class="section-title">Панель папы</h2>
+        <div class="admin-actions-row">
+          <label>
+            <span class="muted">Очки</span>
+            <input type="number" data-admin-points value="${progress.points}" min="0" step="1">
+          </label>
+          <label>
+            <span class="muted">Минуты игр</span>
+            <input type="number" data-admin-play-minutes value="${Math.floor(progress.playSeconds / 60)}" min="0" step="1">
+          </label>
+          <label>
+            <span class="muted">Учёба в кусочке</span>
+            <input type="number" data-admin-learn-minutes value="${Math.floor(progress.learningSeconds / 60)}" min="0" max="9" step="1">
+          </label>
+          <button class="primary" data-admin-save>Сохранить</button>
+          <button class="ghost" data-admin-freshen>Освежить уроки</button>
+          <button class="ghost danger" data-admin-lock-lessons>Стереть уроки</button>
+        </div>
+      </section>
+      <section class="admin-layout">
+        <div class="panel admin-block">
+          <h3>Вещи</h3>
+          <div class="admin-check-grid">
+            ${data.shop.map((item) => `
+              <label class="admin-check">
+                <input type="checkbox" data-admin-item="${item.id}" ${progress.inventory.includes(item.id) ? "checked" : ""}>
+                <span>${item.name}</span>
+              </label>
+            `).join("")}
+          </div>
+        </div>
+        <div class="panel admin-block">
+          <h3>Игры</h3>
+          <div class="admin-check-grid">
+            ${allGameUnlocks.map((game) => `
+              <label class="admin-check">
+                <input type="checkbox" data-admin-game="${game.id}" ${progress.unlockedGames.includes(game.id) ? "checked" : ""}>
+                <span>${game.title}</span>
+              </label>
+            `).join("")}
+          </div>
+        </div>
+        <div class="panel admin-block admin-log">
+          <h3>Журнал</h3>
+          ${progress.adminLog.length ? progress.adminLog.slice(-8).reverse().map((entry) => `
+            <p><strong>${new Date(entry.at).toLocaleDateString("ru-RU")}</strong> ${entry.message}</p>
+          `).join("") : `<p class="muted">Пока пусто.</p>`}
+        </div>
+      </section>
+      <section class="panel admin-lessons">
+        <h3>Уроки</h3>
+        ${lessonBlocks}
       </section>
     `;
   }
@@ -1233,6 +1540,34 @@
       button.addEventListener("click", () => unlockBrickBreakerPack(button.dataset.unlockBrickPack));
     });
 
+    app.querySelectorAll("[data-play-game]").forEach((button) => {
+      button.addEventListener("click", () => startPaidGame(button.dataset.playGame));
+    });
+
+    const timeBankButton = app.querySelector("[data-time-bank]");
+    if (timeBankButton) {
+      timeBankButton.addEventListener("click", () => {
+        showTimeBank = !showTimeBank;
+        render();
+      });
+    }
+
+    const adminLogin = app.querySelector("[data-admin-login]");
+    if (adminLogin) adminLogin.addEventListener("click", adminLoginAttempt);
+
+    const adminSave = app.querySelector("[data-admin-save]");
+    if (adminSave) adminSave.addEventListener("click", saveAdminChanges);
+
+    const adminFreshen = app.querySelector("[data-admin-freshen]");
+    if (adminFreshen) adminFreshen.addEventListener("click", freshenAllCompletedLessons);
+
+    const adminLockLessons = app.querySelector("[data-admin-lock-lessons]");
+    if (adminLockLessons) adminLockLessons.addEventListener("click", lockAllLessonsFromAdmin);
+
+    app.querySelectorAll("[data-admin-lesson]").forEach((input) => {
+      input.addEventListener("change", () => cascadeAdminLessonChecks(input));
+    });
+
     const exportButton = app.querySelector("[data-export]");
     if (exportButton) exportButton.addEventListener("click", exportBackup);
 
@@ -1241,16 +1576,21 @@
 
     const resetButton = app.querySelector("[data-reset]");
     if (resetButton) resetButton.addEventListener("click", resetProgress);
+
+    const gameFrame = app.querySelector(".game-frame");
+    if (gameFrame) gameFrame.addEventListener("load", broadcastPlayTime);
   }
 
   function startLessonQuestions() {
     if (!activeLesson) return;
+    recordLearningAction();
     activeLesson.introDone = true;
     render();
   }
 
   function chooseAnswer(answer) {
     if (!activeLesson || activeLesson.answered) return;
+    recordLearningAction();
     const subject = data.subjects.find((item) => item.id === route.subjectId);
     const level = subject.levels.find((item) => item.id === route.levelId);
     const exercise = level.exercises[activeLesson.index];
@@ -1262,6 +1602,7 @@
 
   function chooseEndlessAnswer(answer) {
     if (!activeEndless || activeEndless.answered) return;
+    recordLearningAction();
     const exercise = activeEndless.current;
     activeEndless.selected = answer;
     activeEndless.answered = true;
@@ -1277,6 +1618,7 @@
 
   function chooseMatch(side, value) {
     if (!activeLesson) return;
+    recordLearningAction();
     const subject = data.subjects.find((item) => item.id === route.subjectId);
     const level = subject.levels.find((item) => item.id === route.levelId);
     const exercise = level.exercises[activeLesson.index];
@@ -1299,6 +1641,7 @@
 
   function nextQuestion() {
     if (!activeLesson) return;
+    recordLearningAction();
     activeLesson.index += 1;
     activeLesson.answered = false;
     activeLesson.selected = null;
@@ -1310,6 +1653,7 @@
 
   function nextEndlessQuestion() {
     if (!activeEndless) return;
+    recordLearningAction();
     const subject = data.subjects.find((item) => item.id === activeEndless.subjectId);
     const pool = subject ? endlessPool(subject) : [];
     if (!pool.length) {
@@ -1373,7 +1717,7 @@
     reader.onload = () => {
       try {
         const imported = JSON.parse(String(reader.result));
-        progress = { ...freshProgress(), ...imported };
+        progress = normalizeProgress(imported);
         saveProgress();
         showToast("Бэкап загружен.");
         render();
@@ -1390,6 +1734,162 @@
     saveProgress();
     showToast("Демо-прогресс сброшен.");
     render();
+  }
+
+  function adminLoginAttempt() {
+    const input = app.querySelector("[data-admin-password]");
+    if (!input || input.value !== ADMIN_PASSWORD) {
+      showToast("Пароль не подходит.");
+      return;
+    }
+    adminUnlocked = true;
+    showToast("Панель открыта.");
+    render();
+  }
+
+  function saveAdminChanges() {
+    if (!adminUnlocked) return;
+    const oldPoints = progress.points;
+    const pointsInput = app.querySelector("[data-admin-points]");
+    const playInput = app.querySelector("[data-admin-play-minutes]");
+    const learnInput = app.querySelector("[data-admin-learn-minutes]");
+    const nextPoints = Math.max(0, Number.parseInt(pointsInput ? pointsInput.value : progress.points, 10) || 0);
+    progress.points = nextPoints;
+    progress.playSeconds = Math.max(0, (Number.parseInt(playInput ? playInput.value : 0, 10) || 0) * 60);
+    progress.learningSeconds = Math.max(0, Math.min(LEARNING_CHUNK_SECONDS - 1, (Number.parseInt(learnInput ? learnInput.value : 0, 10) || 0) * 60));
+
+    progress.inventory = Array.from(app.querySelectorAll("[data-admin-item]"))
+      .filter((input) => input.checked)
+      .map((input) => input.dataset.adminItem);
+
+    progress.unlockedGames = Array.from(app.querySelectorAll("[data-admin-game]"))
+      .filter((input) => input.checked)
+      .map((input) => input.dataset.adminGame);
+
+    const lessonInputs = Array.from(app.querySelectorAll("[data-admin-lesson]"));
+    lessonInputs.forEach((input) => {
+      const levelId = input.dataset.adminLesson;
+      if (input.checked) {
+        progress.completed[levelId] = true;
+        if (!progress.completedAt[levelId]) progress.completedAt[levelId] = new Date().toISOString();
+        if (!progress.stars[levelId]) progress.stars[levelId] = 3;
+      } else {
+        delete progress.completed[levelId];
+        delete progress.completedAt[levelId];
+        delete progress.stars[levelId];
+      }
+    });
+
+    addAdminLog(`Сохранены изменения. Очки: ${oldPoints} → ${progress.points}. Игровое время: ${formatLongTime(progress.playSeconds)}.`);
+    saveProgress();
+    showToast("Сохранено.");
+    render();
+  }
+
+  function freshenAllCompletedLessons() {
+    if (!adminUnlocked) return;
+    const now = new Date().toISOString();
+    Object.keys(progress.completed).forEach((levelId) => {
+      if (progress.completed[levelId]) progress.completedAt[levelId] = now;
+    });
+    addAdminLog("Все готовые уроки отмечены свежими.");
+    saveProgress();
+    showToast("Уроки обновлены.");
+    render();
+  }
+
+  function lockAllLessonsFromAdmin() {
+    if (!adminUnlocked) return;
+    if (!confirm("Стереть только уроки? Очки и вещи останутся.")) return;
+    progress.completed = {};
+    progress.completedAt = {};
+    progress.stars = {};
+    addAdminLog("Уроки очищены. Очки и вещи сохранены.");
+    saveProgress();
+    showToast("Уроки очищены.");
+    render();
+  }
+
+  function addAdminLog(message) {
+    progress.adminLog = [
+      ...(progress.adminLog || []),
+      { at: new Date().toISOString(), message }
+    ].slice(-50);
+  }
+
+  function cascadeAdminLessonChecks(changedInput) {
+    const lessonId = changedInput.dataset.adminLesson;
+    const subject = data.subjects.find((entry) => entry.levels.some((level) => level.id === lessonId));
+    if (!subject) return;
+    const index = subject.levels.findIndex((level) => level.id === lessonId);
+    subject.levels.forEach((level, levelIndex) => {
+      const input = app.querySelector(`[data-admin-lesson="${level.id}"]`);
+      if (!input) return;
+      if (changedInput.checked && levelIndex <= index) input.checked = true;
+      if (!changedInput.checked && levelIndex >= index) input.checked = false;
+    });
+  }
+
+  function recordLearningAction() {
+    lastLearningActionAt = Date.now();
+    updateTimeBankWidget();
+  }
+
+  function learningClockActive(now = Date.now()) {
+    return isLearningRoute() && lastLearningActionAt > 0 && now - lastLearningActionAt <= LEARNING_IDLE_SECONDS * 1000;
+  }
+
+  function tickActivityClock() {
+    const now = Date.now();
+    const delta = Math.max(0, Math.min(5, Math.floor((now - lastActivityTick) / 1000)));
+    lastActivityTick = now;
+    if (!delta || document.hidden) return;
+
+    if (learningClockActive(now)) {
+      addLearningTime(delta);
+    }
+
+    if (activeGameSession && route.view === activeGameSession.gameId) {
+      spendPlayTime(delta);
+    }
+
+    updateTimeBankWidget();
+    broadcastPlayTime();
+  }
+
+  function addLearningTime(seconds) {
+    progress.learningSeconds += seconds;
+    let earnedChunks = 0;
+    while (progress.learningSeconds >= LEARNING_CHUNK_SECONDS) {
+      progress.learningSeconds -= LEARNING_CHUNK_SECONDS;
+      progress.playSeconds += PLAY_CHUNK_SECONDS;
+      earnedChunks += 1;
+    }
+    saveProgress();
+    if (earnedChunks) {
+      showToast(`Открыто игровое время: +${formatLongTime(earnedChunks * PLAY_CHUNK_SECONDS)}.`);
+      if (route.view === "games") render();
+    }
+  }
+
+  function spendPlayTime(seconds) {
+    if (progress.playSeconds <= 0) {
+      progress.playSeconds = 0;
+      return;
+    }
+    progress.playSeconds = Math.max(0, progress.playSeconds - seconds);
+    saveProgress();
+  }
+
+  function broadcastPlayTime() {
+    if (!isGameRoute()) return;
+    const frame = app.querySelector(".game-frame");
+    if (!frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage({
+      type: "guy-play-time",
+      seconds: progress.playSeconds,
+      canStart: canStartGameRun()
+    }, window.location.origin);
   }
 
   function escapeAttr(value) {
@@ -1433,5 +1933,16 @@
     });
   }
 
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin || !event.data || event.data.type !== "guy-game-exit") return;
+    activeGameSession = null;
+    setRoute({ view: "games" });
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    lastActivityTick = Date.now();
+  });
+
+  window.setInterval(tickActivityClock, 1000);
   render();
 })();

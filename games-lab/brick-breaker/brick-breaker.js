@@ -141,7 +141,8 @@
     }
   ];
 
-  const maxLevelParam = Number(new URLSearchParams(window.location.search).get("maxLevel") || levels.length);
+  const params = new URLSearchParams(window.location.search);
+  const maxLevelParam = Number(params.get("maxLevel") || levels.length);
   const allowedLevelCount = Math.max(1, Math.min(levels.length, Number.isFinite(maxLevelParam) ? Math.floor(maxLevelParam) : levels.length));
   const playableLevels = levels.slice(0, allowedLevelCount);
 
@@ -179,6 +180,8 @@
       fireUntil: 0
     }
   };
+  let canStartNewRun = true;
+  let currentRunStarted = false;
 
   function resetGame(keepScore) {
     state.running = false;
@@ -259,7 +262,9 @@
   }
 
   function startGame() {
+    if (!canStartNewRun && currentRunStarted && !state.running && !state.paused) return;
     if (state.won || state.lost) resetGame(state.won);
+    currentRunStarted = true;
     state.running = true;
     state.paused = false;
     state.lastTime = performance.now();
@@ -749,6 +754,7 @@
     levelLabel.textContent = String(state.levelIndex + 1);
     scoreLabel.textContent = String(state.score);
     livesLabel.textContent = String(state.lives);
+    updateStartAccess();
   }
 
   function showMessage(title, text, buttonText) {
@@ -808,8 +814,20 @@
       .forEach((lane) => lane.classList.toggle("active", isDown));
   }
 
+  function updateStartAccess() {
+    const blocked = !canStartNewRun && currentRunStarted && !state.running && !state.paused;
+    startButton.disabled = blocked;
+    restartButton.disabled = !canStartNewRun && currentRunStarted;
+    if (blocked) {
+      startButton.textContent = "Нужно учиться";
+      messageText.textContent = "Игровое время закончилось. Вернись в приложение и поучись ещё, чтобы начать новую игру.";
+    }
+  }
+
   startButton.addEventListener("click", startGame);
   restartButton.addEventListener("click", () => {
+    if (!canStartNewRun && currentRunStarted) return;
+    currentRunStarted = true;
     resetGame(false);
     showMessage("Готов?", "Разбей все цветные блоки. Серые блоки не ломаются.", "Начать");
   });
@@ -839,20 +857,42 @@
 
   touchLanes.forEach((lane) => {
     const direction = lane.dataset.hold;
+    lane.addEventListener("contextmenu", (event) => event.preventDefault());
+    lane.addEventListener("touchstart", (event) => event.preventDefault(), { passive: false });
+    lane.addEventListener("touchend", (event) => event.preventDefault(), { passive: false });
     lane.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       lane.setPointerCapture(event.pointerId);
       setHold(direction, true);
       if (!state.running && !state.paused && !state.won && !state.lost) startGame();
     });
+    lane.addEventListener("pointermove", (event) => event.preventDefault());
     lane.addEventListener("pointerup", () => setHold(direction, false));
     lane.addEventListener("pointercancel", () => setHold(direction, false));
     lane.addEventListener("pointerleave", () => setHold(direction, false));
   });
 
+  ["contextmenu", "selectstart", "dragstart"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => event.preventDefault(), { capture: true });
+  });
+
+  document.addEventListener(
+    "touchmove",
+    (event) => {
+      if (event.target.closest("[data-hold]")) event.preventDefault();
+    },
+    { passive: false }
+  );
+
   window.addEventListener("blur", () => {
     setHold("left", false);
     setHold("right", false);
+  });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin || !event.data || event.data.type !== "guy-play-time") return;
+    canStartNewRun = !!event.data.canStart;
+    updateStartAccess();
   });
 
   resetGame(false);

@@ -1942,11 +1942,11 @@ body {
   padding: 12px;
 }
 
-.game-player {
-  height: calc(100vh - 104px);
-  height: calc(100dvh - 104px);
-  height: calc(100svh - 104px);
-  gap: 6px;
+  .game-player {
+    height: calc(100vh - 104px);
+    height: calc(100dvh - 104px);
+    height: calc(100svh - 104px);
+    gap: 6px;
 }
 
 .game-player-head {
@@ -1954,9 +1954,9 @@ body {
   padding: 7px 9px;
 }
 
-.game-player-head h2 {
-  font-size: 24px;
-}
+  .game-player-head h2 {
+    font-size: 24px;
+  }
 
 .game-frame {
   box-shadow: var(--soft-shadow);
@@ -2095,5 +2095,215 @@ body {
 
   .game-player {
     height: calc(100svh - 84px);
+  }
+}
+
+.side-admin {
+  position: absolute;
+  right: 92px;
+  bottom: 8px;
+  z-index: 8;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(38, 49, 61, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
+  box-shadow: var(--soft-shadow);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.time-bank {
+  position: absolute;
+  left: 14px;
+  bottom: 8px;
+  z-index: 9;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(38, 49, 61, 0.12);
+  border-radius: var(--radius);
+  background: #f1f3f5;
+  color: var(--muted);
+  box-shadow: var(--soft-shadow);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.time-bank.earning {
+  background: #fff4bf;
+  color: #7a5600;
+}
+
+.time-bank.ready {
+  background: #dff7e7;
+  color: #17633b;
+  border-color: rgba(73, 184, 111, 0.28);
+}
+
+.time-bank-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.time-popover {
+  position: absolute;
+  left: 14px;
+  bottom: 50px;
+  z-index: 10;
+  display: grid;
+  gap: 4px;
+  width: min(260px, calc(100vw - 28px));
+  padding: 12px;
+  border: 1px solid rgba(38, 49, 61, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.time-popover span {
+  color: var(--muted);
+}
+
+.small-note {
+  margin: 4px 0;
+  color: var(--red-dark);
+}
+
+.admin-panel,
+.admin-layout,
+.admin-lessons {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.admin-login-row,
+.admin-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  margin-top: 14px;
+}
+
+.admin-login-row input,
+.admin-actions-row input {
+  min-height: 46px;
+  width: min(260px, 100%);
+  padding: 8px 12px;
+  border: 1px solid rgba(38, 49, 61, 0.14);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.admin-actions-row label {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-actions-row .danger {
+  color: var(--red-dark);
+  border-color: rgba(231, 53, 46, 0.2);
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(260px, 0.8fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.admin-block h3,
+.admin-lessons h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.admin-check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 8px;
+  border: 1px solid rgba(38, 49, 61, 0.1);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.76);
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.admin-check input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.admin-lessons {
+  margin-top: 12px;
+}
+
+.admin-lessons .admin-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(38, 49, 61, 0.1);
+}
+
+.admin-log p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.game-play-button {
+  width: min(100%, 240px);
+}
+
+.game-time-note {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+@media (max-width: 900px), (max-height: 690px) {
+  .side-admin {
+    right: 82px;
+    bottom: 8px;
+    min-height: 32px;
+    font-size: 13px;
+  }
+
+  .time-bank {
+    left: 10px;
+    min-height: 32px;
+    font-size: 13px;
+  }
+
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-check-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-check {
+    font-size: 13px;
   }
 }

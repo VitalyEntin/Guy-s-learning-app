@@ -12,6 +12,7 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -21,6 +22,10 @@ body {
   min-height: 100svh;
   overflow: hidden;
   touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 body {
@@ -40,23 +45,32 @@ button {
   cursor: pointer;
   font: inherit;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .game-shell {
-  display: grid;
-  grid-template-columns: minmax(62px, 8vw) minmax(500px, 1fr) minmax(62px, 8vw);
-  gap: clamp(5px, 1vw, 10px);
-  align-items: stretch;
+  position: relative;
+  display: block;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
   height: 100svh;
-  padding: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
+  padding:
+    max(5px, env(safe-area-inset-top))
+    max(88px, env(safe-area-inset-right))
+    max(5px, env(safe-area-inset-bottom))
+    max(88px, env(safe-area-inset-left));
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .stage-column {
   position: relative;
   display: block;
+  height: 100%;
   min-width: 0;
   min-height: 0;
 }
@@ -199,19 +213,38 @@ canvas {
 }
 
 .touch-lane {
+  position: fixed;
+  z-index: 6;
+  top: 88px;
+  bottom: 86px;
+  width: 62px;
   display: grid;
   align-content: center;
   justify-items: center;
   gap: 8px;
   min-width: 0;
-  min-height: 100%;
+  min-height: 0;
   border: 1px solid rgba(34, 48, 66, 0.12);
+  border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.42)),
     repeating-linear-gradient(135deg, rgba(38, 114, 217, 0.12) 0 8px, rgba(255, 255, 255, 0.08) 8px 18px);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.42);
   color: rgba(34, 48, 66, 0.72);
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  cursor: default;
+  -webkit-user-drag: none;
+}
+
+.lane-left {
+  left: max(44px, env(safe-area-inset-left));
+}
+
+.lane-right {
+  right: max(44px, env(safe-area-inset-right));
 }
 
 .touch-lane.active {
@@ -241,9 +274,11 @@ canvas {
 
 @media (max-width: 760px) {
   .game-shell {
-    grid-template-columns: minmax(58px, 10vw) minmax(260px, 1fr) minmax(58px, 10vw);
-    gap: 6px;
-    padding: 7px;
+    padding:
+      max(5px, env(safe-area-inset-top))
+      max(72px, env(safe-area-inset-right))
+      max(5px, env(safe-area-inset-bottom))
+      max(72px, env(safe-area-inset-left));
   }
 
   .game-header {
@@ -260,6 +295,20 @@ canvas {
     min-width: 86px;
   }
 
+  .touch-lane {
+    top: 78px;
+    bottom: 78px;
+    width: 54px;
+  }
+
+  .lane-left {
+    left: max(38px, env(safe-area-inset-left));
+  }
+
+  .lane-right {
+    right: max(38px, env(safe-area-inset-right));
+  }
+
   canvas {
     width: min(100%, calc((100svh - 14px) * 1.3333));
     max-height: calc(100svh - 14px);
@@ -268,9 +317,11 @@ canvas {
 
 @media (max-height: 520px) {
   .game-shell {
-    grid-template-columns: minmax(48px, 7vw) minmax(360px, 1fr) minmax(48px, 7vw);
-    gap: 4px;
-    padding: 4px;
+    padding:
+      max(4px, env(safe-area-inset-top))
+      max(66px, env(safe-area-inset-right))
+      max(4px, env(safe-area-inset-bottom))
+      max(66px, env(safe-area-inset-left));
   }
 
   .game-header {
@@ -328,5 +379,20 @@ canvas {
     width: 42px;
     height: 42px;
     font-size: 36px;
+  }
+
+  .touch-lane {
+    top: 56px;
+    bottom: 62px;
+    width: 50px;
+    border-radius: 14px;
+  }
+
+  .lane-left {
+    left: max(34px, env(safe-area-inset-left));
+  }
+
+  .lane-right {
+    right: max(34px, env(safe-area-inset-right));
   }
 }

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Platform Line Lab</title>
+    <link rel="stylesheet" href="line-generator.css">
+  </head>
+  <body>
+    <main class="line-shell" aria-label="Platform line generator lab">
+      <section class="lab-hud">
+        <div>
+          <p class="eyebrow">Sky Runner lab</p>
+          <h1>Platform Line</h1>
+        </div>
+        <div class="stats" aria-live="polite">
+          <span>Platform <strong id="platformRatio">0%</strong></span>
+          <span>Gap <strong id="gapRatio">0%</strong></span>
+          <span>Jump <strong id="jumpRatio">0%</strong></span>
+        </div>
+      </section>
+
+      <canvas id="lineCanvas" class="line-canvas" aria-label="Scrolling platform line preview"></canvas>
+
+      <section class="pattern-strip" aria-label="Recent generated segments">
+        <div id="segmentStrip" class="segment-strip"></div>
+      </section>
+
+      <section class="lab-actions">
+        <button id="slowerButton" aria-label="Slow down">-</button>
+        <button id="resetButton">Reset</button>
+        <button id="fasterButton" aria-label="Speed up">+</button>
+      </section>
+    </main>
+
+    <script src="line-generator.js"></script>
+  </body>
+</html>
